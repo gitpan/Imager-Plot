@@ -1,0 +1,19 @@
+The source code in this Perl Module is copyright by
+Arnar M. Hrafnkelsson (addi@umich.edu) 2001 (C)
+
+This source is released under the same terms as Perl, that is GPL and
+Artistic licenses.  For details see the Perl License information and
+the files Copying and Artistic in this Distribution.
+
+This module requires Imager 0.38 or newer to be installed on the
+target machine.  
+
+The pod Documentation is ALMOST ALL WRONG.  To see the usable part of the
+api look at the test.pl script.
+
+Everything is in complete disarray, but someone said release soon and
+often (which sounds kind of strange since it will obviously be complete
+trash).
+
+Enjoy!
+
