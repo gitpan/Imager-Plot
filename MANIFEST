@@ -12,8 +12,13 @@ lib/Imager/Plot/Axis.pm
 lib/Imager/Plot/DataSet.pm
 lib/Imager/Plot/Style.pm
 ImUgly.ttf
+dcr10.afm
+dcr10.pfb
 samples/sample1.pl
 samples/sample2.pl
 samples/sample3.pl
 samples/sample4.pl
 samples/sample5.pl
+samples/sample6.pl
+samples/sample7.pl
+samples/sample8.pl

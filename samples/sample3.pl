@@ -5,13 +5,15 @@ use lib qw(blib/lib blib/arch);
 use Imager;
 use Imager::Plot::Axis;
 
+Imager::Font->priorities(qw(w32 ft2 tt t1));
+
 # Create our dummy data
 @X = -10..10;
 @Y = map { $_**3 } @X;
 
 # Create Axis object
 
-$Axis = Imager::Plot::Axis->new(Width => 200, Height => 180, GlobalFont=>"ImUgly.ttf");
+$Axis = Imager::Plot::Axis->new(Width => 200, Height => 180, GlobalFont=>get_font());
 $Axis->AddDataSet(X => \@X, Y => \@Y);
 
 $Axis->{XgridShow} = 1;  # Xgrid enabled
@@ -40,3 +42,14 @@ $Axis->Render(Xoff=>30, Yoff=>200, Image=>$img);
 mkdir("sampleout", 0777) unless -d "sampleout";
 $img->write(file => "sampleout/sample3.ppm")
     or die $img->errstr;
+
+
+sub get_font {
+  my %opts = (size=>12, color=>Imager::Color->new('black'));
+
+  my $font = Imager::Font->new(file=>"ImUgly.ttf", %opts)
+    || Imager::Font->new(file=>"./dcr10.pfb", %opts);
+  die "Couldn't load any font!\n" unless $font;
+
+  return $font;
+}

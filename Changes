@@ -24,12 +24,16 @@ Revision history for Perl extension Imager::CoolPlot.
 	Theo Van Dinter for sending patches.
 
 0.06  Tue May 14 06:00:28 EDT 2002
-      - Corrected many things which gave warnings due to typos in
+	- Corrected many things which gave warnings due to typos in
 	hash member names.
 
 0.07  
-      - Lots of large fixes, mostly rewriten documentation,
+	- Lots of large fixes, mostly rewriten documentation,
 	new samples in samples/*.pl.  Callback capabilities for
 	ticklabels.
 
+0.08   Sat Jul 13 13:38:09 2002
+	- Extra samples, minor fixes, improved font handling,
+	better installation code.
 
+    

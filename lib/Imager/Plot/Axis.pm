@@ -30,6 +30,18 @@ my $black = Imager::Color->new(0,0,0,255);
 my $blue  = Imager::Color->new(0,0,70,255);
 my $white = Imager::Color->new(255,255,255,255);
 
+sub gfont {
+  my $fname = shift;
+  if (ref($fname)) {
+    return $fname;
+  } else {
+    my $font = Imager::Font->new(file => $fname, size=>10,color=>$black);
+    die "Unable to load font $fname for Axis labels\n" unless $font;
+    return $font;
+  }
+}
+
+
 sub new {
   my $proto = shift;
   my $class = ref($proto) || $proto;
@@ -55,8 +67,8 @@ sub new {
 	    make_yticklist => \&nothing,
 	    make_xgridlist => \&MakeXGridList,
 	    make_ygridlist => \&MakeYGridList,
-	    XtickFont      => (ref($fname)) ? $fname : Imager::Font->new(file => $fname, size=>10,color=>$black),
-	    YtickFont      => (ref($fname)) ? $fname : Imager::Font->new(file => $fname, size=>10,color=>$black),
+	    XtickFont      => gfont($fname),
+	    YtickFont      => gfont($fname),
 	    BackGround     => $white,
 	    FrameColor     => $black,
 	    XgridShow	   => 1,
@@ -367,7 +379,6 @@ sub RenderTickLabels {
 
 # $style->{line}->{color=>$color, antialias=>0};
 # $style->{marker}->{color=>$color, symbol=>"circle"};
-# $style->{text}->{font=>$font, handler=>$coderef};
 # coderef decides if text goes with that point
 
 
@@ -412,10 +423,11 @@ sub MakeXGridList {
     last if $i > $max;
   }
 
-  if (($rc[0]-$min) < 0.03*($max-$min)) {
+  if (($rc[0]-$min) < 0.01*($max-$min)) {
     shift(@rc);
   }
-  if ($max-($rc[-1]) < 0.03*($max-$min)) {
+  if ($max-($rc[-1]) < 0.01*($max-$min)) {
+#    print "$min $max $rc[-1]\n";
     pop(@rc);
   }
 
@@ -436,10 +448,10 @@ sub MakeYGridList {
     last if $i > $max;
   }
 
-  if (($rc[0]-$min) < 0.03*($max-$min)) {
+  if (($rc[0]-$min) < 0.01*($max-$min)) {
     shift(@rc);
   }
-  if ($max-($rc[-1]) < 0.03*($max-$min)) {
+  if ($max-($rc[-1]) < 0.01*($max-$min)) {
     pop(@rc);
   }
   $self->{YGRIDLIST} = \@rc;

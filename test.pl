@@ -14,7 +14,7 @@ mkdir("testout", 0777) unless -d "testout";
 @X = -10..10;
 @Y = map { $_**3 } @X;
 
-$Axis = Imager::Plot::Axis->new(Width => 200, Height => 180, GlobalFont=>"ImUgly.ttf");
+$Axis = Imager::Plot::Axis->new(Width => 200, Height => 180, GlobalFont=>get_font() );
 $Axis->AddDataSet(X => \@X, Y => \@Y);
 
 $Axis->{XgridShow} = 1;  # Xgrid enabled
@@ -51,7 +51,7 @@ print "ok 2\n";
 
 $plot = Imager::Plot->new(Width  => 550,
 			  Height => 350,
-			  GlobalFont => 'ImUgly.ttf');
+			  GlobalFont => get_font() );
 
 my @X = 0..50;
 my @Y = map { sin($_/10) } @X;
@@ -76,5 +76,10 @@ $img->write(file => "testout/test2.ppm");
 print "ok 3\n";
 
 
+sub get_font {
+  my $font = Imager::Font->new(file=>"ImUgly.ttf")
+    || Imager::Font->new(file=>"./dcr10.pfb", color=>Imager::Color->new('black'));
+  die "Couldn't load any font!\n" unless $font;
 
-
+  return $font;
+}

@@ -5,13 +5,16 @@ use lib qw(blib/lib blib/arch);
 use Imager qw(:handy);
 use Imager::Plot;
 
+Imager::Font->priorities(qw(w32 ft2 tt t1));
+
 @X  = map { $_/10.0 } 0..100;
 @Y  = map { sin } @X;
 @XY = map { [$X[$_]+1, $Y[$_]+1] } 0..$#X;
 
+
 $plot = Imager::Plot->new(Width  => 500,
 			  Height => 300,
-			  GlobalFont => 'ImUgly.ttf');
+			  GlobalFont => get_font() );
 
 $plot->AddDataSet(X  => \@X, Y => \@Y);
 $plot->AddDataSet(XY => \@XY,
@@ -33,7 +36,7 @@ $Axis->{YgridShow} = 0;
 
 # Only draw left and bottom edge
 
-$Axis->{Border} = "";
+$Axis->{Border} = "bt";
 
 # Put 10% white space on each border from data
 
@@ -68,3 +71,12 @@ $img->write(file => "sampleout/sample1.ppm")
 
 
 
+sub get_font {
+  my %opts = (size=>12, color=>Imager::Color->new('black'));
+
+  my $font = Imager::Font->new(file=>"ImUgly.ttf", %opts)
+    || Imager::Font->new(file=>"./dcr10.pfb", %opts);
+  die "Couldn't load any font!\n" unless $font;
+
+  return $font;
+}

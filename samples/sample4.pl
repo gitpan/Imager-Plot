@@ -5,9 +5,11 @@ use lib qw(blib/lib blib/arch);
 use Imager;
 use Imager::Plot;
 
+Imager::Font->priorities(qw(w32 ft2 tt t1));
+
 $plot = Imager::Plot->new(Width  => 550,
 			  Height => 350,
-			  GlobalFont => 'ImUgly.ttf');
+			  GlobalFont => get_font());
 
 my @X = map { $_+ 0.5*cos($_/2) } 0..20;
 my @Y = map { sin($_/2) } @X;
@@ -65,3 +67,15 @@ $plot->Render(Image => $img, Xoff => 40, Yoff => 370);
 
 mkdir("sampleout", 0777) unless -d "sampleout";
 $img->write(file => "sampleout/sample4.ppm");
+
+
+
+sub get_font {
+  my %opts = (size=>12, color=>Imager::Color->new('black'));
+
+  my $font = Imager::Font->new(file=>"ImUgly.ttf", %opts)
+    || Imager::Font->new(file=>"./dcr10.pfb", %opts);
+  die "Couldn't load any font!\n" unless $font;
+
+  return $font;
+}
