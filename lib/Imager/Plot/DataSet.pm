@@ -74,6 +74,10 @@ sub new {
     ($self->{X}[$_], $self->{Y}[$_]) = @{$opts{XY}->[$_]} for 0..$nx;
   }
 
+  if ($opts{Z}) {
+    $self->{Z} = [@{$opts{Z}}];
+  }
+
   $self->{Xmin} = (defined $opts{Xmin}) ? $opts{Xmin} : undef;
   $self->{Ymin} = (defined $opts{Ymin}) ? $opts{Ymin} : undef;
   $self->{Xmax} = (defined $opts{Xmax}) ? $opts{Xmax} : undef;
@@ -134,7 +138,7 @@ sub Draw {
       while($width) {
 	my $w = ($width & 1) ? ++$pw : -$pw;
 	my @yd = map { $_ + $w } @y;
-	
+
 	$img->polyline(
 		       x => \@x,
 		       y => \@yd,
@@ -159,6 +163,13 @@ sub Draw {
       #		   color => $style{marker}->{color},
       #		   r => 3);
     }
+  }
+  if ($style{code}) {
+    # Work defered to a coderef:
+    # calling order is:
+    # ($DataSet, $xr, $yr, $Xmapper, $Ymapper, $img)
+    my $opts = $style{code}->{opts};
+    $style{code}->{ref}->($self, \@x, \@y, $opts{Xmapper}, $opts{Ymapper}, $img, $opts);
   }
 
 }

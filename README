@@ -8,8 +8,21 @@ the files Copying and Artistic in this Distribution.
 This module usually requires the latest release version of Imager to be
 installed on the target machine.  
 
-The pod Documentation is ALMOST ALL WRONG.  To see the usable part of the
-api look at the test.pl script and the example utility program plot.pl.
+The pod Documentation is getting better but is not finished.
+It may be a good idea to look in the samples diretory and pick things 
+up from there.
 
-Enjoy, Arnar!
+There is also a small DWIM (do what I mean) plot app named plot.pl 
+in the distribution.
+
+Thanks to Mengwong (Freeside) for providing the Tufte trilogy of
+books on visual presentation.  Tufte is a genius on the subject and
+the books rocks!
+
+
+Enjoy!
+
+-- Arnar
+
+
 

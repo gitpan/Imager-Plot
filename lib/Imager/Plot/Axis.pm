@@ -65,7 +65,9 @@ sub new {
 	    XgridNum	   => 5,
 	    XtickMargin	   => 3,
 	    YtickMargin	   => 3,
-	    Border         => "lrtb",	# left, right, top, bottom
+	    Border         => "lrtb", #rt",	# left, right, top, bottom
+	    Xformat        => \&myround,
+	    Yformat        => \&myround,
 	    @_);
   my $self  = \%opts;
 
@@ -141,44 +143,65 @@ sub Render {
   my $Ymapper = MakeMap(@{$self->{YRANGE}}, $ymax, $ymin);
 
   if ($self->{BackGround}) {
-      $img->box(color => $self->{BackGround},
-		xmin  => $xmin,
-		ymin  => $ymin,
-		xmax  => $xmax,
-		ymax  => $ymax,
-		filled=> 1);
+    $img->box(color => $self->{BackGround},
+	      xmin  => $xmin,
+	      ymin  => $ymin,
+	      xmax  => $xmax,
+	      ymax  => $ymax,
+	      filled=> 1);
   }
-  
+
   $self->RenderGrid(Image  => $img,
 		    Xmapper=> $Xmapper,
 		    Ymapper=> $Ymapper,
 		    Xoff   => $opts{Xoff},
 		    Yoff   => $opts{Yoff},
-		    XgridShow	=> $opts{XgridShow},
-		    YgridShow	=> $opts{YgridShow},
-		    );
+		    XgridShow => $opts{XgridShow},
+		    YgridShow => $opts{YgridShow},
+		   );
 
-  if ($self->{FrameColor}) {
-      $img->box(color => $self->{FrameColor},
-		xmin  => $xmin,
-		ymin  => $ymin,
-		xmax  => $xmax,
-		ymax  => $ymax,
-		filled=> 0);
+
+  # Draw the Axis edges
+  if (index($self->{'Border'}, "l")>-1) {
+    $img->line(color => $self->{FrameColor},
+	       x1 => $xmin,
+	       y1 => $ymin,
+	       x2 => $xmin,
+	       y2 => $ymax);
+  }
+  if (index($self->{'Border'}, "r")>-1) {
+    $img->line(color => $self->{FrameColor},
+	       x1 => $xmax,
+	       y1 => $ymin,
+	       x2 => $xmax,
+	       y2 => $ymax);
+  }
+  if (index($self->{'Border'}, "b")>-1) {
+    $img->line(color => $self->{FrameColor},
+	       x1 => $xmin,
+	       y1 => $ymax,
+	       x2 => $xmax,
+	       y2 => $ymax);
+  }
+  if (index($self->{'Border'}, "t")>-1) {
+    $img->line(color => $self->{FrameColor},
+	       x1 => $xmin,
+	       y1 => $ymin,
+	       x2 => $xmax,
+	       y2 => $ymin);
   }
 
   for my $DataSet (@{$self->{DATASETS}}) {
-      $DataSet->Draw(Image   => $img,
-		     Xmapper => $Xmapper,
-		     Ymapper => $Ymapper);
+    $DataSet->Draw(Image   => $img,
+		   Xmapper => $Xmapper,
+		   Ymapper => $Ymapper);
   }
 
   $self->RenderTickLabels(Image  => $img,
 			  Xmapper=> $Xmapper,
 			  Ymapper=> $Ymapper,
 			  %opts,
-			  );
-  
+			 );
 }
 
 
@@ -189,146 +212,148 @@ sub trn {
 
 
 sub RenderGrid {
-    my $self = shift;
-    my %opts  = @_;
-    my $xgridc;
-    my $ygridc = $xgridc = i_color_new(140,140,140,0);
-    my $img = $opts{Image};
+  my $self = shift;
+  my %opts  = @_;
+  my $xgridc;
+  my $ygridc = $xgridc = i_color_new(140,140,140,0);
+  my $img = $opts{Image};
 
-    my $ymin = $opts{Yoff} - $self->{Height};
-    my $ymax = $opts{Yoff};
-    my $xmin = $opts{Xoff};
-    my $xmax = $opts{Xoff} + $self->{Width};
+  my $ymin = $opts{Yoff} - $self->{Height};
+  my $ymax = $opts{Yoff};
+  my $xmin = $opts{Xoff};
+  my $xmax = $opts{Xoff} + $self->{Width};
 
-    if($opts{XgridShow}) {
-	my @XGrid = $opts{Xmapper}->(@{$self->{XGRIDLIST}});
-	for my $xx (@XGrid) {
-	    $img->polyline(y=>[$ymin,$ymax],x=>[$xx,$xx],color=>$xgridc);
-	}
+  if($opts{XgridShow}) {
+    my @XGrid = $opts{Xmapper}->(@{$self->{XGRIDLIST}});
+    for my $xx (@XGrid) {
+      $img->polyline(y=>[$ymin,$ymax],x=>[$xx,$xx],color=>$xgridc);
     }
+  }
 
-    if($opts{YgridShow}) {
-	my @YGrid = $opts{Ymapper}->(@{$self->{YGRIDLIST}});
-	for my $yy (@YGrid) {
-	    $img->polyline(y=>[$yy,$yy],x=>[$xmin,$xmax],color=>$xgridc);
-	}
+  if($opts{YgridShow}) {
+    my @YGrid = $opts{Ymapper}->(@{$self->{YGRIDLIST}});
+    for my $yy (@YGrid) {
+      $img->polyline(y=>[$yy,$yy],x=>[$xmin,$xmax],color=>$xgridc);
     }
+  }
 }
 
 # now incorrectly uses the Grid points
 
 sub RenderTickLabels {
 
-    my $self = shift;
-    my %opts  = @_;
-    my $img    = $opts{Image};
+  my $self = shift;
+  my %opts = @_;
+  my $img  = $opts{Image};
 
-    my $ymin = $opts{Yoff} - $self->{Height};
-    my $ymax = $opts{Yoff};
-    my $xmin = $opts{Xoff};
-    my $xmax = $opts{Xoff} + $self->{Width};
-  
-    my @XGrid = $opts{Xmapper}->(@{$self->{XGRIDLIST}});
-    my @YGrid = $opts{Ymapper}->(@{$self->{YGRIDLIST}});
+  my $ymin = $opts{Yoff} - $self->{Height};
+  my $ymax = $opts{Yoff};
+  my $xmin = $opts{Xoff};
+  my $xmax = $opts{Xoff} + $self->{Width};
 
-    my $font   = $self->{XtickFont};
+  my @XGrid = $opts{Xmapper}->(@{$self->{XGRIDLIST}});
+  my @YGrid = $opts{Ymapper}->(@{$self->{YGRIDLIST}});
 
-    for my $xi (0..@XGrid-1) {
-	my $xx = $XGrid[$xi];
-	my $xv = $self->{XGRIDLIST}->[$xi];
+  my $font  = $self->{XtickFont};
 
-	my $string = myround($xv);
+  for my $xi (0..@XGrid-1) {
+    my $xx = $XGrid[$xi];
+    my $xv = $self->{XGRIDLIST}->[$xi];
 
-	my ($neg_width,
-	    $global_descent,
-	    $pos_width,
-	    $global_ascent,
-	    $descent,
-	    $ascent) = $font->bounding_box(string=>$string);
+    my $string = $self->{Xformat}->($xv);
 
-	my $x = $xx-($neg_width+$pos_width)/2;
-	my $ay = 0;
+    my ($neg_width,
+	$global_descent,
+	$pos_width,
+	$global_ascent,
+	$descent,
+	$ascent) = $font->bounding_box(string=>$string);
 
-	if(ref($opts{XtickMarker}) eq 'HASH') {
-	    my %style = %{$opts{XtickMarker}};
+    my $x = $xx-($neg_width+$pos_width)/2;
+    my $ay = 0;
 
-	    if($style{symbol} eq 'line') {
-		my $ystart = $ymax;
-		if($style{align} eq 'center') {
-		    $ystart -= int($style{size} / 2);
-		    $ay = int($style{size} / 2);
-		} elsif($style{align} eq 'top') {
-		    $ystart -= $style{size};
-		} else {
-		    $ay = $style{size};
-		}
+    if(ref($opts{XtickMarker}) eq 'HASH') {
+      my %style = %{$opts{XtickMarker}};
 
-		my $mcolor = $style{color} || $self->{FrameColor};
-
-		$img->line( color => $mcolor,
-			    x1 => $xx, x2 => $xx,
-			    y1 => $ystart, y2 => $ystart + $style{size},
-			    antialias => $style{antialias}
-			    );
-	    }
+      if($style{symbol} eq 'line') {
+	my $ystart = $ymax;
+	if($style{align} eq 'center') {
+	  $ystart -= int($style{size} / 2);
+	  $ay = int($style{size} / 2);
+	} elsif($style{align} eq 'top') {
+	  $ystart -= $style{size};
+	} else {
+	  $ay = $style{size};
 	}
-	
-	$img->string(font  => $font,
-		     text  => $string,
-		     x     => $xx-($neg_width+$pos_width)/2,
-		     y     => $ymax+$global_ascent+3+$opts{XtickMargin} + $ay,
-		     aa    => 1);
-	
+
+	my $mcolor = $style{color} || $self->{FrameColor};
+
+	$img->line(color => $mcolor,
+		   x1 => $xx,
+		   x2 => $xx,
+		   y1 => $ystart,
+		   y2 => $ystart + $style{size},
+		   antialias => $style{antialias}
+		  );
+      }
     }
-    
-    
-    $font = $self->{YtickFont};
 
-    for my $yi (0..@YGrid-1) {
-	my $yy = $YGrid[$yi];
-	my $yv = $self->{YGRIDLIST}->[$yi];
+    $img->string(font => $font,
+		 text => $string,
+		 x    => $xx-($neg_width+$pos_width)/2,
+		 y    => $ymax+$global_ascent+3+$opts{XtickMargin} + $ay,
+		 aa   => 1);
+  }
 
-	my $string = myround($yv);
-	
-	my ($neg_width,
-	    $global_descent,
-	    $pos_width,
-	    $global_ascent,
-	    $descent,
-	    $ascent) = $font->bounding_box(string=>$string);
+  $font = $self->{YtickFont};
 
-	my $ax = 0;
+  for my $yi (0..@YGrid-1) {
+    my $yy = $YGrid[$yi];
+    my $yv = $self->{YGRIDLIST}->[$yi];
 
-  	if(ref($opts{YtickMarker}) eq 'HASH') {
-	    my %style = %{$opts{XtickMarker}};
+    my $string = $self->{Yformat}->($yv);
 
-	    if($style{symbol} eq 'line') {
-		my $xstart = $xmin - $style{size};
-		if($style{align} eq 'center') {
-		    $xstart += int($style{size} / 2);
-		    $ax = int($style{size} / 2);
-		} elsif($style{align} eq 'left') {
-		    $xstart = $xmin;
-		} else {
-		    $ax = $style{size};
-		}
+    my ($neg_width,
+	$global_descent,
+	$pos_width,
+	$global_ascent,
+	$descent,
+	$ascent) = $font->bounding_box(string=>$string);
 
-		my $mcolor = $style{color} || $self->{FrameColor};
+    my $ax = 0;
 
-		$img->line( color => $mcolor,
-			    x1 => $xstart, x2 => $xstart + $style{size},
-			    y1 => $yy, y2 => $yy,
-			    antialias => $style{antialias}
-			    );
-	    }
+    if(ref($opts{YtickMarker}) eq 'HASH') {
+      my %style = %{$opts{XtickMarker}};
+
+      if($style{symbol} eq 'line') {
+	my $xstart = $xmin - $style{size};
+	if($style{align} eq 'center') {
+	  $xstart += int($style{size} / 2);
+	  $ax = int($style{size} / 2);
+	} elsif($style{align} eq 'left') {
+	  $xstart = $xmin;
+	} else {
+	  $ax = $style{size};
 	}
-	
-	$img->string(font  => $font,
-		     text  => $string,
-		     x     => $xmin-$pos_width-3 - $self->{YtickMargin} - $ax,
-		     y     => $yy+($ascent+$descent)/2,
-		     aa    => 1);
+
+	my $mcolor = $style{color} || $self->{FrameColor};
+
+	$img->line( color => $mcolor,
+		    x1 => $xstart,
+		    x2 => $xstart + $style{size},
+		    y1 => $yy,
+		    y2 => $yy,
+		    antialias => $style{antialias}
+		  );
+      }
     }
+
+    $img->string(font => $font,
+		 text => $string,
+		 x    => $xmin-$pos_width-3 - $self->{YtickMargin} - $ax,
+		 y    => $yy+($ascent+$descent)/2,
+		 aa   => 1);
+  }
 }
 
 
@@ -348,71 +373,86 @@ sub RenderTickLabels {
 
 
 sub make_dranges {
-    my $self = shift;
-    my @bbox = $self->data_bbox();
-    $self->{XDRANGE} = [@bbox[0,1]];
-    $self->{YDRANGE} = [@bbox[2,3]];
+  my $self = shift;
+  my @bbox = $self->data_bbox();
+  $self->{XDRANGE} = [@bbox[0,1]];
+  $self->{YDRANGE} = [@bbox[2,3]];
 }
 
 sub make_xrange {
-    my $self = shift;
-    $self->{XRANGE} = [@{$self->{XDRANGE}}];
+  my $self = shift;
+  $self->{XRANGE} = [@{$self->{XDRANGE}}];
 }
 
 sub make_yrange {
-    my $self = shift;
-    $self->{YRANGE} = [@{$self->{YDRANGE}}];
+  my $self = shift;
+  $self->{YRANGE} = [@{$self->{YDRANGE}}];
 }
 
 sub make_ranges {
-    my $self = shift;
-    $self->make_dranges(); # real member function
-    $self->{make_xrange}->($self);
-    $self->{make_yrange}->($self);
+  my $self = shift;
+  $self->make_dranges(); # real member function
+  $self->{make_xrange}->($self);
+  $self->{make_yrange}->($self);
 }
 
 sub nothing {}
 
 sub MakeXGridList {
-    my $self = shift;
-    my ($min, $max)  = @{$self->{XRANGE}};
-    my $d  = ($max-$min)/$self->{XgridNum};
-    my $d2 = trn($d);
-    my (@rc,$i);
+  my $self = shift;
+  my ($min, $max)  = @{$self->{XRANGE}};
+  my $d  = ($max-$min)/$self->{XgridNum};
+  my $d2 = trn($d);
+  my (@rc,$i);
 
-    $i = sprintf("%.0f",$min/$d2)*$d2;
-    while ( 1 ) {
-	push(@rc,$i) if($i >= $min);
-	$i+=$d2;
-	last if $i > $max;
-    }
-    $self->{XGRIDLIST} = \@rc;
+  $i = sprintf("%.0f",$min/$d2)*$d2;
+  while ( 1 ) {
+    push(@rc,$i) if($i >= $min);
+    $i+=$d2;
+    last if $i > $max;
+  }
+
+  if (($rc[0]-$min) < 0.03*($max-$min)) {
+    shift(@rc);
+  }
+  if ($max-($rc[-1]) < 0.03*($max-$min)) {
+    pop(@rc);
+  }
+
+  $self->{XGRIDLIST} = \@rc;
 }
 
 sub MakeYGridList {
-    my $self = shift;
-    my ($min, $max)  = @{$self->{YRANGE}};
-    my $d  = ($max-$min)/$self->{YgridNum};
-    my $d2 = trn($d);
-    my (@rc,$i);
+  my $self = shift;
+  my ($min, $max)  = @{$self->{YRANGE}};
+  my $d  = ($max-$min)/$self->{YgridNum};
+  my $d2 = trn($d);
+  my (@rc,$i);
 
-    $i = sprintf("%.0f",$min/$d2)*$d2;
-    while ( 1 ) {
-	push(@rc,$i) if($i >= $min);
-	$i+=$d2;
-	last if $i > $max;
-    }
-    $self->{YGRIDLIST} = \@rc;
+  $i = sprintf("%.0f",$min/$d2)*$d2;
+  while ( 1 ) {
+    push(@rc,$i) if($i >= $min);
+    $i+=$d2;
+    last if $i > $max;
+  }
+
+  if (($rc[0]-$min) < 0.03*($max-$min)) {
+    shift(@rc);
+  }
+  if ($max-($rc[-1]) < 0.03*($max-$min)) {
+    pop(@rc);
+  }
+  $self->{YGRIDLIST} = \@rc;
 }
 
 
 sub make_decor {
-    my $self = shift;
-    $self->{make_ranges}   ->($self);
-    $self->{make_xticklist}->($self);
-    $self->{make_yticklist}->($self);
-    $self->{make_xgridlist}->($self);
-    $self->{make_ygridlist}->($self);
+  my $self = shift;
+  $self->{make_ranges}   ->($self);
+  $self->{make_xticklist}->($self);
+  $self->{make_yticklist}->($self);
+  $self->{make_xgridlist}->($self);
+  $self->{make_ygridlist}->($self);
 }
 
 
@@ -429,29 +469,65 @@ Imager::Plot::Axis - Axis handling of Imager::Plot.
 
 =head1 SYNOPSIS
 
+  use Imager;
   use Imager::Plot::Axis;
-  $Axis = Imager::Plot::Axis->new(Width => 200, Height => 180);
-  $Axis->AddDataSet($DataSet1);
-  $Axis->AddDataSet($DataSet2);
 
-  $Axis->Render(img => $img, Xoff => 20, Yoff=> 100);
+  # Create our dummy data
+  @X = 0..10;
+  @Y = map { $_**3 } @X;
+
+  # Create Axis object
+
+  $Axis = Imager::Plot::Axis->new(Width => 200, Height => 180, GlobalFont=>"ImUgly.ttf");
+  $Axis->AddDataSet(X => \@X, Y => \@Y);
+
+  $Axis->{XgridShow} = 1;  # Xgrid enabled
+  $Axis->{YgridShow} = 0;  # Ygrid disabled
+
+  $Axis->{Border} = "lrb"; # left right and bottom edges
+
+  # See Imager::Color manpage for color specification
+  $Axis->{BackGround} = "#cccccc";
+
+  # Override the default function that chooses the x range
+  # of the graph, similar exists for y range
+
+  $Axis->{make_xrange} = sub {
+      $self = shift;
+      my $min = $self->{XDRANGE}->[0]-1;
+      my $max = $self->{XDRANGE}->[1]+1;
+      $self->{XRANGE} = [$min, $max];
+  };
+
+  $img = Imager->new(xsize=>600, ysize => 400);
+  $img->box(filled=>1, color=>"white");
+
+  $Axis->Render(Xoff=>50, Yoff=>370, Image=>$img);
+
+  $img->write(file=>"foo.ppm") or die $img->errstr;
+
 
 
 =head1 DESCRIPTION
 
 This part of Imager::Plot takes care of managing the graph area
-itself.  It handles the grid, tickmarks, background in axis area
-and the data sets of course.  All the data sets have to be given
-to the Axis object before rendering it so that everything is 
-only written only once and scaling of axis can be done automatically.
-This also helps in doing tricks like shadows.
+itself.  It handles the grid, tickmarks, background in axis area and
+the data sets of course.  All the data sets have to be given to the
+Axis object before rendering it so that everything is only written
+only once and scaling of axis can be done automatically.  This also
+helps in doing chartjunk tricks like shadows.
 
 The size of the Axis area is controlled by the Width and Height
 parameters of the C<new> method.  The border region/frame of the axis
-is considered to lie in the coordinate system.  The default order
-of drawing is the following:  Background image, grid, frame, ticks.
+is considered to lie in the coordinate system.  The default order of
+drawing is the following: Background image, grid, frame, ticks.
 
-Note that the Axis does not render any labels by itself
+Note that the Axis currently renders the ticklabels.  This might
+change in the near future.
+
+
+
+
 
 
 
@@ -466,7 +542,7 @@ Note that the Axis does not render any labels by itself
 Arnar M. Hrafnkelsson, addi@umich.edu
 
 =head1 SEE ALSO
-Imager, Imager::Plot, Imager::DataSet
+Imager, Imager::Plot, Imager::DataSet, Imager::Style
 perl(1).
 
 =cut

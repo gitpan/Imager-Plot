@@ -26,7 +26,7 @@ require Exporter;
 @ISA = qw(Exporter AutoLoader);
 @EXPORT = qw();
 
-$VERSION = '0.06';
+$VERSION = '0.07';
 
 
 # Plot generation process:
@@ -72,7 +72,6 @@ sub new {
 	    GlobalFont   => undef,
 	    Xlabel       => "",
 	    Ylabel       => "",
-	    
 	    @_);
 
   my $fname = $opts{GlobalFont};
@@ -81,7 +80,7 @@ sub new {
   if(!$opts{XlabelFont}) {
       $opts{XlabelFont} = (ref($fname)) ? $fname : Imager::Font->new(file => $fname, size=>12,color=>$black);
   }
-	  
+
   if(!$opts{YlabelFont}) {
       $opts{YlabelFont} = (ref($fname)) ? $fname : Imager::Font->new(file => $fname, size=>12,color=>$black);
   }
@@ -158,21 +157,16 @@ sub Render {
   delete $opts{Xoff};
   delete $opts{Yoff};
 
-  $Axis->Render(
-		Xoff => $Xoff,
+  $Axis->Render(Xoff => $Xoff,
 		Yoff => $Yoff,
-		%opts
-		);
+		%opts);
 
 
-  $self->RenderLabels(
-		      Xoff   => $Xoff,
+  $self->RenderLabels(Xoff   => $Xoff,
 		      Yoff   => $Yoff,
-		      %opts
-		      );
-
-
+		      %opts);
 }
+
 
 sub RenderLabels {
 
@@ -215,17 +209,17 @@ sub RenderLabels {
    $ascent) = $font->bounding_box(string=>$string);
 
   if ($self->{YlabelPosition} and $self->{YlabelPosition} eq 'center') {
-      $img->string(font  => $font,
-		   text  => $string,
-		   x     => $xmin - ($pos_width - $neg_width) - $self->{YlabelMargin},
-		   y     => $ymax - (($ymax - $ymin)/2) - (($descent + $ascent) / 2),
-		   aa    => 1);
+    $img->string(font  => $font,
+		 text  => $string,
+		 x     => $xmin - ($pos_width - $neg_width) - $self->{YlabelMargin},
+		 y     => $ymax - (($ymax - $ymin)/2) - (($descent + $ascent) / 2),
+		 aa    => 1);
   } else {
-      $img->string(font  => $font,	
-		   text  => $string,
-		   x     => $xmin-10,    # XXX: Fudge factor
-		   y     => $ymin-3,     # more fudge
-		   aa    => 1);
+    $img->string(font  => $font,
+		 text  => $string,
+		 x     => $xmin-10,    # XXX: Fudge factor
+		 y     => $ymin-3,     # more fudge
+		 aa    => 1);
   }
 
   $string = $self->{Title};
@@ -272,54 +266,68 @@ __END__
 
 =head1 NAME
 
-Imager::Plot - Perl extension for generating 24 or 8 bit plots.
+Imager::Plot - Perl extension for generating fancy graphic plots in color.
 
 =head1 SYNOPSIS
 
   use Imager;
   use Imager::Plot;
 
-  $plot = Imager::Plot->new(Width  => 400,
-                            Height => 300,
-                            GlobalFont => 'ImUgly.ttf');
+  $plot = Imager::Plot->new(Width  => 550,
+  			  Height => 350,
+  			  GlobalFont => 'ImUgly.ttf');
 
-  $plot->AddDataSet(X  => \@X, Y => \@Y);
-  $plot->AddDataSet(XY => \@XY,
-    style=>{marker=>{size   => 4,
-                     symbol => 'circle',
-                     color  => NC(0,120,0)
-                    },
-            line=>{color=>NC(255,0,0)}
-           });
+  my @X = 0..100;
+  my @Y = map { sin($_/10) } @X;
+  my @Z = map { 1+cos($_/10) } @X;
+
+  $plot->AddDataSet(X  => \@X, Y => \@Z);
+  $plot->AddDataSet(X  => \@X, Y => \@Y,
+    		  style=>{marker=>{size   => 2,
+    				   symbol => 'circle',
+    				   color  => Imager::Color->new('red'),
+    			       },
+    		      });
 
   $img = Imager->new(xsize=>600, ysize => 400);
-  $img->box(filled=>1, color=>Imager::Color->new(190,220,255));
+  $img->box(filled=>1, color=>'white');
 
-  $plot->Render(Image => $img, Xoff => 30, Yoff => 340);
+  $plot->{'Ylabel'} = 'angst';
+  $plot->{'Xlabel'} = 'time';
+  $plot->{'Title'} = 'Quality time';
+
+  $plot->Render(Image => $img, Xoff => 40, Yoff => 370);
   $img->write(file => "testout.png");
-
-
 
 
 =head1 DESCRIPTION
 
-*** This module is in development, Don't depend on   ***
-*** your script to work with the next version (or    ***
-*** even this version for that matter.               ***
-
 This is a module for generating fancy raster plots in color.
+There is support for drawing multiple datasets on the same plot,
+over a background image.  It's even possible to do shadows with
+some thinking.
+
+It's also possible to generate clean plots without any chartjunk
+at all.
+
 The plot is generated in a few phases.  First the initial
 plot object is generated and contains defaults at that
-point.  Then datasets are added with specifications.
+point.  Then datasets are added with possible drawing
+specifications.
 
-Look at test.pl for more hints on making this work.
+Most of the actual work is delegated to Imager::Plot::Axis.
+See the Imager::Plot::Axis manpage for more information
+on how to control grid generation, ranges for data (zoom).
+
+For more on the drawing styles for Datasets see the
+Imager::Plot::DataSet manpage.
+
 
 =head1 AUTHOR
 
 Arnar M. Hrafnkelsson, addi@umich.edu
 
 =head1 SEE ALSO
-Imager, perl(1).
+Imager, Imager::Plot::Axis, Imager::Plot::DataSet, perl(1).
 
 =cut
-
