@@ -26,7 +26,7 @@ require Exporter;
 @ISA = qw(Exporter AutoLoader);
 @EXPORT = qw();
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 
 # Preloaded methods go here.
@@ -64,10 +64,11 @@ BEGIN {
 sub new {
   my $proto = shift;
   my $class = ref($proto) || $proto;
+
   my %opts=(
 	    Width  => 400, # default size if no image is given
 	    Height => 300,
-	    IMG    => undef,
+	    Image    => undef,
 	    LeftMargin   => 10,  # This is global 'extra' space, nothing should be painted in it
 	    RightMargin  => 10,
 	    TopMargin    => 10,
@@ -78,8 +79,23 @@ sub new {
 	    Title        => "",
 	    GlobalFont   => undef,
 
+	    Xlabel       => "",
+	    Ylabel       => "",
+
 	    @_);
 
+  my $fname = $opts{GlobalFont};
+  my $black = Imager::Color->new(0,0,0,0);
+
+  $opts{XlabelFont} = Imager::Font->new(file => $fname, size=>12,color=>$black)
+    if !$opts{XlabelFont};
+	
+  $opts{YlabelFont} = Imager::Font->new(file => $fname, size=>12,color=>$black)
+    if !$opts{YlabelFont};
+
+  $opts{TitleFont}  = Imager::Font->new(file => $fname, size=>16,color=>$black)
+    if !$opts{TitleFont};
+	
   my $self  = \%opts;
   bless ($self, $class);
   return $self;
@@ -97,7 +113,7 @@ sub new {
 # }
 
 
-sub set {
+sub Set {
   my $self = shift;
   my %np=@_;
   for (keys %np) {
@@ -108,9 +124,9 @@ sub set {
 
 sub SetDimensions {
   my $self = shift;
-  if ($self->{IMG}) {
-    $self->{Width}  = $self->{IMG}->getwidth();
-    $self->{Height} = $self->{IMG}->getheight();
+  if ($self->{Image}) {
+    $self->{Width}  = $self->{Image}->getwidth();
+    $self->{Height} = $self->{Image}->getheight();
   }
 
   if ($self->{XAxis} and !$self->{Width}) {
@@ -160,8 +176,84 @@ sub Render {
 
   my $Axis = $self->GetAxis();
   $Axis->Render(Image=>$opts{Image},
-		Xoff => $opts{Xoff},
-		Yoff => $opts{Yoff});
+		Xoff => $opts{Xoff}+$self->{LeftMargin},
+		Yoff => $opts{Yoff}-$self->{BottomMargin});
+
+
+  $self->RenderLabels(Image  => $opts{Image},
+		      Xoff   => $opts{Xoff}+$self->{LeftMargin},
+		      Yoff   => $opts{Yoff}-$self->{BottomMargin});
+
+
+}
+
+
+
+sub RenderLabels {
+
+  my $self = shift;
+  my %opts  = @_;
+  my $img    = $opts{Image};
+
+  my $ymin = $opts{Yoff} - $self->GetAxis()->{Height};
+  my $ymax = $opts{Yoff};
+  my $xmin = $opts{Xoff};
+  my $xmax = $opts{Xoff} + $self->GetAxis()->{Width};
+
+  my $xx = ($xmin+$xmax)/2;
+
+  my $string = $self->{Xlabel};
+  my $font   = $self->{XlabelFont};
+
+  my ($neg_width,
+      $global_descent,
+      $pos_width,
+      $global_ascent,
+      $descent,
+      $ascent) = $font->bounding_box(string=>$string);
+
+  $img->string(font  => $font,
+	       text  => $string,
+	       x     => $xx-($neg_width+$pos_width)/2,
+	       y     => $ymax+$global_ascent+$self->GetAxis()->{'XtickFont'}->{'size'}+5,
+	       aa    => 1);
+
+
+  $string = $self->{Ylabel};
+  $font   = $self->{YlabelFont};
+
+  ($neg_width,
+   $global_descent,
+   $pos_width,
+   $global_ascent,
+   $descent,
+   $ascent) = $font->bounding_box(string=>$string);
+
+  $img->string(font  => $font,
+	       text  => $string,
+	       x     => $xmin-10,    # XXX: Fudge factor
+	       y     => $ymin-3,     # more fudge
+	       aa    => 1);
+
+
+  $string = $self->{Title};
+  $font   = $self->{TitleFont};
+
+  ($neg_width,
+   $global_descent,
+   $pos_width,
+   $global_ascent,
+   $descent,
+   $ascent) = $font->bounding_box(string=>$string);
+
+  $img->string(font  => $font,
+	       text  => $string,
+	       x     => ($xmin+$xmax)/2-($neg_width+$pos_width)/2,
+	       y     => $ymin-$self->{'YlabelFont'}->{'size'},
+	       aa    => 1);
+
+
+
 }
 
 
@@ -169,11 +261,10 @@ sub Render {
 
 
 
-
-sub ptext {
-  my ($self, $x, $y, $string)=@_;
+sub PutText {
+  my ($self, $x, $y, $string) = @_;
   my $len=length($string);
-  my $img = $self->{BIMG};
+  my $img = $self->{BImage};
 
   $img->string(font=>$self->{FONT}, string=>$string, x=>$x, y=>$y) or die $img->errstr;
 }
