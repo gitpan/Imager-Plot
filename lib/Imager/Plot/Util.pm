@@ -9,6 +9,7 @@ require Exporter;
 	     min
 	     max
 	     minmax
+	     myround
 	    );
 
 sub min {
@@ -32,6 +33,12 @@ sub minmax {
   }
   return ($min, $max);
 }
+
+
+sub myround {
+  0+sprintf("%.2f",shift);
+}
+
 
 
 

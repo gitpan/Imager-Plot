@@ -17,7 +17,6 @@ $plot = Imager::Plot->new(Width  => 600,
 			  Height => 400,
 			  LeftMargin   => 30,
 			  BottomMargin => 30,
-#			  GlobalFont => 'arial.ttf');
 			  GlobalFont => 'ImUgly.ttf');
 
 $plot->AddDataSet(X  => \@X, Y => \@Y);
@@ -30,20 +29,20 @@ $plot->AddDataSet(XY => \@XY, style=>{marker=>{size=>4,
 					    }
 				     });
 
-# These are lacking a proper api, and the functionality should
-# be moved from the Axis to the Plot
+
+$plot->GetAxis()->{BackGround} = undef;
 
 $plot->Set(Xlabel=> "time [sec]" );
 $plot->Set(Ylabel=> "Amplitude [mV]" );
 $plot->Set(Title => "Patheticity measured in millivolts" );
 
-$plot->GetAxis()->{BackGround} = undef;
 
-$img = Imager->new(xsize=>600, ysize => 400)->box(filled=>1, color=>Imager::Color->new(190,220,255));
+
+$img = Imager->new(xsize=>600, ysize => 430)->box(filled=>1, color=>Imager::Color->new(190,220,255));
 #$img->read(file=>"fluffy.jpg");
 #$img->read(file=>"skjald.jpg");
 
-$plot->Render(Image => $img, Xoff =>0+2, Yoff => 400+3);
+$plot->Render(Image => $img, Xoff =>0+2, Yoff => 420+3);
 
 $new = $img->convert(matrix=>[ [ 0.6, 0.3, 0.3 ],
 			       [ 0.3, 0.6, 0.3 ],
@@ -51,14 +50,13 @@ $new = $img->convert(matrix=>[ [ 0.6, 0.3, 0.3 ],
 
 $new->filter(type=>'gaussian', stddev => 2.5) or die $new->errstr;
 
-$plot->Render(Image => $new, Xoff =>0, Yoff => 400);
+$plot->Render(Image => $new, Xoff =>0, Yoff => 420);
 
 
 $new->write(file => "testout.ppm");
 #$img->write(file => "example.png");
 
 print "ok 2\n";
-
 
 
 

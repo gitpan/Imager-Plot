@@ -6,9 +6,11 @@ Plot.pm
 Makefile.PL
 MANIFEST
 test.pl
+plot.pl
 README
 lib/Imager/Plot/Util.pm
 lib/Imager/Plot/Axis.pm
 lib/Imager/Plot/DataSet.pm
+lib/Imager/Plot/Style.pm
 ImUgly.ttf
 fluffy.jpg

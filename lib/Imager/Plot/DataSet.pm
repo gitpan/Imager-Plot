@@ -2,9 +2,55 @@ package Imager::Plot::DataSet;
 
 use strict;
 use Imager;
-
-use Imager;
 use Imager::Plot::Util;
+
+#
+# Style string is in the form of one or more
+# [rgbckmyo][o-](number)?
+#
+# examples:
+#
+# rc is a red circle
+
+#
+
+
+
+{
+    my %colors = (
+		  r=>"red",
+		  g=>"green",
+		  b=>"blue",
+		  c=>"cyan",
+		  k=>"black",
+		  m=>"magenta",
+		  y=>"yellow",
+		  o=>"orange",
+		  );
+
+    my %styles = ("-","line",
+		  o=>"circle",
+		 );
+
+sub style_from_string {
+  my $string = shift;
+  my %style;
+
+  while(s/^([rgbckmyo][ox-])(\d+)?$\s*//) {
+    my $key = $styles{$2};
+    my $color = $colors{$1};
+    my $width = defined $3 ? $colors{$3} : 1;
+    $style{$key} = {
+		    color=>$color,
+		      width=>$width
+		   };
+  }
+  return \%style;
+}
+
+
+}
+
 
 
 sub new {
@@ -28,8 +74,19 @@ sub new {
     ($self->{X}[$_], $self->{Y}[$_]) = @{$opts{XY}->[$_]} for 0..$nx;
   }
 
+  $self->{Xmin} = (defined $opts{Xmin}) ? $opts{Xmin} : undef;
+  $self->{Ymin} = (defined $opts{Ymin}) ? $opts{Ymin} : undef;
+  $self->{Xmax} = (defined $opts{Xmax}) ? $opts{Xmax} : undef;
+  $self->{Ymax} = (defined $opts{Ymax}) ? $opts{Ymax} : undef;
+
   $self->{'style'} = $opts{style} ||
-    { line=>{ color => Imager::Color->new("#0000FF"), antialias=>1 } };
+    ($opts{string} ?
+     style_from_string($opts{string}) :
+     { line=>{ color => Imager::Color->new("#0000FF"), antialias=>1 } }
+    );
+
+  my $l = $self->{'style'}->{'line'};
+  $l->{'width'} = 1 if defined $l and !exists $l->{'width'};
 
   $self->{name} = $opts{name} if exists $opts{name};
 
@@ -38,7 +95,15 @@ sub new {
 
 sub data_bbox {
   my $self = shift;
-  return (minmax(@{$self->{X}}), minmax(@{$self->{Y}}) );
+  my @X = minmax(@{$self->{X}});
+  my @Y = minmax(@{$self->{Y}});
+
+  $X[0] = $self->{Xmin} if(defined $self->{Xmin});
+  $Y[0] = $self->{Ymin} if(defined $self->{Ymin});
+  $X[1] = $self->{Xmax} if(defined $self->{Xmax});
+  $Y[1] = $self->{Ymax} if(defined $self->{Ymax});
+
+  return (@X, @Y);
 }
 
 
@@ -48,27 +113,37 @@ sub Draw {
   my %opts = @_;
   my $img = $opts{Image};
 
-  use Data::Dumper;
-
   my %style = %{$self->{'style'}};
 
   my @x = $opts{Xmapper}->(@{$self->{X}});
   my @y = $opts{Ymapper}->(@{$self->{Y}});
 
-  #  print "TX=@x\n";
-  #  print "TY=@y\n";
-
   my @ox = @{$self->{X}};
   my @oy = @{$self->{Y}};
-
-#  print "X=@ox\n";
-#  print "Y=@oy\n";
 
   if ($style{line}) {
     $img->polyline(x=>\@x,
 		   y=>\@y,
 		   color=>$style{line}->{color},
 		   antialias=>$style{line}->{antialias});
+
+    if($style{line}->{'width'} > 1) {
+      my $width = $style{line}->{width} - 1;
+      my $pw = 0;
+
+      while($width) {
+	my $w = ($width & 1) ? ++$pw : -$pw;
+	my @yd = map { $_ + $w } @y;
+	
+	$img->polyline(
+		       x => \@x,
+		       y => \@yd,
+		       color => $style{line}->{color},
+		       antialias => $style{line}->{antialias}
+		      );
+	$width--;
+      }
+    }
   }
 
   if ($style{marker}) {

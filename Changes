@@ -22,3 +22,7 @@ Revision history for Perl extension Imager::CoolPlot.
 0.05  Tue Jan 29 13:52:29 EST 2002
       - Fixed some axis flipping - thanks to John Reuning and 
 	Theo Van Dinter for sending patches.
+
+0.06  Tue May 14 06:00:28 EDT 2002
+      - Corrected many things which gave warnings due to typos in
+				hash member names.
