@@ -36,4 +36,5 @@ Revision history for Perl extension Imager::CoolPlot.
 	- Extra samples, minor fixes, improved font handling,
 	better installation code.
 
-    
+0.09
+	- New filled drawing style. (from simon).   

@@ -150,6 +150,19 @@ sub Draw {
     }
   }
 
+  if ($style{area}) {
+    # bottom right
+    push( @x, $x[scalar(@x)-1] );
+    push( @y, $opts{y2} );
+    # bottom left
+    push( @x, $x[0] );
+    push( @y, $opts{y2} );
+    $img->polygon(x=>\@x,
+		   y=>\@y,
+		   color=>$style{area}->{color},
+		   antialias=>$style{area}->{antialias});
+  }
+
   if ($style{marker}) {
     die "symbol must be circle for now!\n" unless $style{marker}->{symbol} eq "circle";
     my $l = $#x;

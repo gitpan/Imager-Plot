@@ -151,8 +151,8 @@ sub Render {
 
   $self->{make_decor}->($self);
 
-  my $Xmapper = MakeMap(@{$self->{XRANGE}}, $xmin, $xmax);
-  my $Ymapper = MakeMap(@{$self->{YRANGE}}, $ymax, $ymin);
+  my $Xmapper = MakeMap(@{$self->{XRANGE}}, $xmin+1, $xmax);
+  my $Ymapper = MakeMap(@{$self->{YRANGE}}, $ymax, $ymin+1);
 
   if ($self->{BackGround}) {
     $img->box(color => $self->{BackGround},
@@ -186,7 +186,7 @@ sub Render {
 	       x1 => $xmax,
 	       y1 => $ymin,
 	       x2 => $xmax,
-	       y2 => $ymax);
+	       y2 => $ymax+1);
   }
   if (index($self->{'Border'}, "b")>-1) {
     $img->line(color => $self->{FrameColor},
@@ -206,7 +206,12 @@ sub Render {
   for my $DataSet (@{$self->{DATASETS}}) {
     $DataSet->Draw(Image   => $img,
 		   Xmapper => $Xmapper,
-		   Ymapper => $Ymapper);
+		   Ymapper => $Ymapper,
+		   x1 => $xmin+1,
+		   y1 => $ymin,
+		   x2 => $xmax,
+		   y2 => $ymax
+                   );
   }
 
   $self->RenderTickLabels(Image  => $img,
